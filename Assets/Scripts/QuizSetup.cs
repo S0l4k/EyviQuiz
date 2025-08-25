@@ -72,7 +72,7 @@ public class QuizSetup : MonoBehaviour
 
         UpdateScoreUI();
 
-        // Wyłącz wszystkie tła i intro
+        
         playersRound1Background.SetActive(false);
         leaderRound1Background.SetActive(false);
         playersRound2Background.SetActive(false);
