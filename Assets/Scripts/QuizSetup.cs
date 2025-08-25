@@ -37,6 +37,7 @@ public class QuizSetup : MonoBehaviour
     [Header("Scores")]
     public TMP_Text[] playerScoreTextsHost;
     public TMP_Text[] playerScoreTextsPlayers;
+   
 
     [Header("Ending")]
     public GameObject playersFinalScreen;
@@ -247,7 +248,7 @@ public class QuizSetup : MonoBehaviour
         }
 
         if (winnerIndex != -1)
-            finalWinnerText.text = playerNames[winnerIndex] + " - Congratulations!";
+            finalWinnerText.text = playerNames[winnerIndex];
         else
             finalWinnerText.text = "No winner!";
     }

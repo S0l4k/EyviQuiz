@@ -22,6 +22,12 @@ public class ArduinoInputManager : MonoBehaviour
     public AudioClip correctAnswerSound;
     public AudioClip wrongAnswerSound;
 
+    [Header("Player Highlights")]
+    public Image[] playerHighlights;
+
+    [Header("Host Highlights")]
+    public Image[] hostHighlights;
+
     private SerialPort serialPort;
     private bool playerBuzzed = false;
     public bool canBuzz = false;
@@ -44,6 +50,26 @@ public class ArduinoInputManager : MonoBehaviour
         {
             Debug.LogError("Błąd otwierania portu: " + e.Message);
         }
+        
+        foreach (var img in playerHighlights)
+        {
+            if (img != null)
+            {
+                Color c = img.color;
+                c.a = 0f;
+                img.color = c;
+            }
+        }
+        foreach (var img in hostHighlights)
+        {
+            if (img != null)
+            {
+                Color c = img.color;
+                c.a = 0f;
+                img.color = c;
+            }
+        }
+
     }
 
     void Update()
@@ -107,6 +133,7 @@ public class ArduinoInputManager : MonoBehaviour
         playerBuzzed = false;
         currentPlayer = -1;
         EnableNextButtons();
+        ClearHighlights();
     }
 
     void OnApplicationQuit()
@@ -139,8 +166,49 @@ public class ArduinoInputManager : MonoBehaviour
         wrongAnswerButton.SetActive(true);
         playerBuzzed = true;
         canBuzz = false;
+
+        HighlightPlayer(playerIndex);
     }
 
+    private void HighlightPlayer(int index)
+    {
+        ClearHighlights(); 
+        if (index >= 0 && index < playerHighlights.Length && playerHighlights[index] != null)
+        {
+            Color c = playerHighlights[index].color;
+            c.a = 1f;
+            playerHighlights[index].color = c;
+        }
+
+        if (index >= 0 && index < hostHighlights.Length && hostHighlights[index] != null)
+        {
+            Color c = hostHighlights[index].color;
+            c.a = 1f;
+            hostHighlights[index].color = c;
+        }
+    }
+
+    private void ClearHighlights()
+    {
+        foreach (var img in playerHighlights)
+        {
+            if (img != null)
+            {
+                Color c = img.color;
+                c.a = 0f;
+                img.color = c;
+            }
+        }
+        foreach (var img in hostHighlights)
+        {
+            if (img != null)
+            {
+                Color c = img.color;
+                c.a = 0f;
+                img.color = c;
+            }
+        }
+    }
     void SimulateBuzz(int playerNumber)
     {
         PlayerBuzz(playerNumber);
