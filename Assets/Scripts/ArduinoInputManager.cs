@@ -13,7 +13,7 @@ public class ArduinoInputManager : MonoBehaviour
     public GameObject wrongAnswerButton;
 
     [Header("Host Next Buttons")]
-    public GameObject nextQuestionButton;
+    
     public GameObject nextRoundButton;
 
     [Header("Audio")]
@@ -112,7 +112,7 @@ public class ArduinoInputManager : MonoBehaviour
 
        
         PlaySound(correctAnswerSound);
-
+        SendToArduino("0");
         ResetBuzz();
     }
 
@@ -122,7 +122,7 @@ public class ArduinoInputManager : MonoBehaviour
 
         
         PlaySound(wrongAnswerSound);
-
+        SendToArduino("0");
         ResetBuzz();
     }
 
@@ -132,9 +132,11 @@ public class ArduinoInputManager : MonoBehaviour
         wrongAnswerButton.SetActive(false);
         playerBuzzed = false;
         currentPlayer = -1;
-        EnableNextButtons();
         ClearHighlights();
+        OnNextQuestion();
+        nextRoundButton.SetActive(true);
     }
+
 
     void OnApplicationQuit()
     {
@@ -168,6 +170,7 @@ public class ArduinoInputManager : MonoBehaviour
         canBuzz = false;
 
         HighlightPlayer(playerIndex);
+        nextRoundButton.SetActive(false);
     }
 
     private void HighlightPlayer(int index)
@@ -219,23 +222,30 @@ public class ArduinoInputManager : MonoBehaviour
         Debug.Log("Prowadzący: następne pytanie – gracze mogą się zgłaszać");
         canBuzz = true;
         playerBuzzed = false;
-        nextQuestionButton.SetActive(false);
+        
         nextRoundButton.SetActive(false);
     }
 
     public void OnNextRound()
     {
         Debug.Log("Prowadzący: następna runda");
-        quizSetup.NextRound();
+        int eliminatedPlayer = quizSetup.NextRound();
+
+        if (eliminatedPlayer >= 0)
+        {
+            
+            SendToArduino("-" + (eliminatedPlayer + 1));
+        }
+
         canBuzz = false;
-        nextQuestionButton.SetActive(false);
+        
         nextRoundButton.SetActive(false);
     }
-
-    public void EnableNextButtons()
+    public void EnableBuzzing()
     {
-        nextQuestionButton.SetActive(true);
-        nextRoundButton.SetActive(true);
+        Debug.Log("Intro zakończone – gracze mogą się zgłaszać");
+        canBuzz = true;
+        playerBuzzed = false;
     }
 
     private void PlaySound(AudioClip clip)
@@ -243,6 +253,22 @@ public class ArduinoInputManager : MonoBehaviour
         if (audioSource != null && clip != null)
         {
             audioSource.PlayOneShot(clip);
+        }
+    }
+
+    public void SendToArduino(string message)
+    {
+        if (serialPort != null && serialPort.IsOpen)
+        {
+            try
+            {
+                serialPort.WriteLine(message);
+                Debug.Log("Wysłano do Arduino: " + message);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("Błąd wysyłania do Arduino: " + e.Message);
+            }
         }
     }
 }
