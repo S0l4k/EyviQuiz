@@ -287,11 +287,26 @@ public class QuizSetup : MonoBehaviour
             }
         }
 
-        string winnerText = (winnerIndex != -1) ? playerNames[winnerIndex] : "No winner!";
-        finalWinnerText.text = winnerText;
-        if (finalWinnerTextHost != null)
-            finalWinnerTextHost.text = winnerText;
+        if (winnerIndex != -1)
+            finalWinnerText.text = playerNames[winnerIndex];
+        else
+            finalWinnerText.text = "No winner!";
+
+        
+        if (arduinoInputManager != null)
+        {
+            int lastEliminated = -1;
+            for (int i = 0; i < playerScores.Length; i++)
+            {
+                if (i != winnerIndex && playerScores[i] >= 0)
+                    lastEliminated = i;
+            }
+
+            if (lastEliminated >= 0)
+                arduinoInputManager.SendToArduino("-" + (lastEliminated + 1));
+        }
     }
+
 
     public void ResetQuiz()
     {
@@ -303,6 +318,8 @@ public class QuizSetup : MonoBehaviour
             playerScoreTextsPlayers[i].gameObject.SetActive(true);
             playerNameTextsHost[i].gameObject.SetActive(true);
             playerNameTextsPlayers[i].gameObject.SetActive(true);
+            if (arduinoInputManager != null)
+                arduinoInputManager.SendToArduino("9");
         }
 
         UpdateScoreUI();

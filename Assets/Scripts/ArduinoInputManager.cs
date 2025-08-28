@@ -83,7 +83,7 @@ public class ArduinoInputManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Alpha4)) SimulateBuzz(4);
 
             // --- Arduino ---
-            if (serialPort != null && serialPort.IsOpen)
+            while (serialPort.BytesToRead > 0)
             {
                 try
                 {
@@ -97,7 +97,10 @@ public class ArduinoInputManager : MonoBehaviour
                         }
                     }
                 }
-                catch (System.TimeoutException) { }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning("Błąd odczytu: " + e.Message);
+                }
             }
         }
     }
