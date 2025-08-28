@@ -17,6 +17,7 @@ public class QuizSetup : MonoBehaviour
     [Header("Start Backgrounds (Initial UI Panels)")]
     public GameObject playersBackground;
     public GameObject leaderBackground;
+    public GameObject keyboard;
 
     [Header("Round Intros (Players + Leader)")]
     public GameObject playersRound1Background;
@@ -83,12 +84,15 @@ public class QuizSetup : MonoBehaviour
         leaderGameBackground.SetActive(false);
         playersFinalScreen.SetActive(false);
         leaderFinalScreen.SetActive(false);
+        keyboard.SetActive(false);
+        
     }
 
     void OnStartQuiz()
     {
         startQuizButton.gameObject.SetActive(false);
         playerNamesPanel.SetActive(true);
+        keyboard.SetActive(true);
     }
 
     void CheckPlayerNames()
@@ -113,6 +117,7 @@ public class QuizSetup : MonoBehaviour
         playerNamesPanel.SetActive(false);
         playersBackground.SetActive(false);
         leaderBackground.SetActive(false);
+        keyboard.SetActive(false);
 
         for (int i = 0; i < playerNameTextsHost.Length; i++)
             playerNameTextsHost[i].text = playerNames[i];
