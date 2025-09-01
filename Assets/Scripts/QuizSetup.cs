@@ -13,6 +13,7 @@ public class QuizSetup : MonoBehaviour
     public GameObject playerNamesPanel;
     public TMP_InputField[] playerNameInputs;
     public Button nextButton;
+    public GameObject ArduinoConnection;
 
     [Header("Start Backgrounds (Initial UI Panels)")]
     public GameObject playersBackground;
@@ -86,6 +87,7 @@ public class QuizSetup : MonoBehaviour
 
         playersBackground.SetActive(true);
         leaderBackground.SetActive(true);
+        ArduinoConnection.SetActive(true);
         container_p.SetActive(false);
         container_l.SetActive(false);
         playersGameBackground.SetActive(false);
@@ -116,6 +118,7 @@ public class QuizSetup : MonoBehaviour
             }
         }
         nextButton.gameObject.SetActive(allFilled);
+        ArduinoConnection.SetActive(false );
     }
 
     void OnNext()
@@ -358,6 +361,7 @@ public class QuizSetup : MonoBehaviour
             playerScoreTextsPlayers[i].gameObject.SetActive(true);
             playerNameTextsHost[i].gameObject.SetActive(true);
             playerNameTextsPlayers[i].gameObject.SetActive(true);
+            
             if (arduinoInputManager != null)
                 arduinoInputManager.SendToArduino("9");
         }
@@ -373,7 +377,7 @@ public class QuizSetup : MonoBehaviour
         leaderFinalScreen.SetActive(false);
         playersBackground.SetActive(true);
         leaderBackground.SetActive(true);
-
+        ArduinoConnection.SetActive(true);
         startQuizButton.gameObject.SetActive(true);
     }
 }

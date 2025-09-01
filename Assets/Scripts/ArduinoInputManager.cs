@@ -51,16 +51,7 @@ public class ArduinoInputManager : MonoBehaviour
         correctAnswerButton.SetActive(false);
         wrongAnswerButton.SetActive(false);
 
-        serialPort = new SerialPort(portName, baudRate);
-        try
-        {
-            serialPort.Open();
-            serialPort.ReadTimeout = 50;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Błąd otwierania portu: " + e.Message);
-        }
+    
         
       
     }
@@ -271,5 +262,24 @@ public class ArduinoInputManager : MonoBehaviour
             }
         }
     }
+
+    public void OpenPort()
+    {
+        if (serialPort != null && serialPort.IsOpen)
+            serialPort.Close();
+
+        serialPort = new SerialPort(portName, baudRate);
+        try
+        {
+            serialPort.Open();
+            serialPort.ReadTimeout = 50;
+            Debug.Log("ArduinoInputManager: port otwarty: " + portName);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("ArduinoInputManager: błąd otwierania portu: " + e.Message);
+        }
+    }
+
 }
 
