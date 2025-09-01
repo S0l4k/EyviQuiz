@@ -84,7 +84,8 @@ public class QuizSetup : MonoBehaviour
 
         UpdateScoreUI();
 
-        
+        playersBackground.SetActive(true);
+        leaderBackground.SetActive(true);
         container_p.SetActive(false);
         container_l.SetActive(false);
         playersGameBackground.SetActive(false);
@@ -160,7 +161,7 @@ public class QuizSetup : MonoBehaviour
     }
     private IEnumerator RoundIntroCoroutine()
     {
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(4f);
 
         
         container_p.SetActive(false);

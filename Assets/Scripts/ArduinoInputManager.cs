@@ -183,8 +183,8 @@ public class ArduinoInputManager : MonoBehaviour
             Vector3 screenPos_l = RectTransformUtility.WorldToScreenPoint(uiCanva_l.worldCamera, playerUIElements_l[playerIndex].position);
             Vector3 screenPos_p = RectTransformUtility.WorldToScreenPoint(uiCanva_P.worldCamera, playerUIElements_p[playerIndex].position);
            
-            Vector3 worldPos_l = mainCamera_l.ScreenToWorldPoint(new Vector3(screenPos_l.x, screenPos_l.y, 16f));
-            Vector3 worldPos_p = mainCamera_p.ScreenToWorldPoint(new Vector3(screenPos_p.x, screenPos_p.y, 16f));
+            Vector3 worldPos_l = mainCamera_l.ScreenToWorldPoint(new Vector3(screenPos_l.x, screenPos_l.y, 10f));
+            Vector3 worldPos_p = mainCamera_p.ScreenToWorldPoint(new Vector3(screenPos_p.x, screenPos_p.y, 10f));
 
             
             hostHighlights[playerIndex].transform.position = worldPos_l;
