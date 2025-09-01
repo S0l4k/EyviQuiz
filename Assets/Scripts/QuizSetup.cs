@@ -20,16 +20,20 @@ public class QuizSetup : MonoBehaviour
     public GameObject keyboard;
 
     [Header("Round Intros (Players + Leader)")]
-    public GameObject playersRound1Background;
-    public GameObject leaderRound1Background;
-    public GameObject playersRound2Background;
-    public GameObject leaderRound2Background;
-    public GameObject playersRound3Background;
-    public GameObject leaderRound3Background;
+    public GameObject container_p;
+    public GameObject container_l;
+    public TMP_Text roundText_p;
+    public TMP_Text roundText_l;
+    private string[] roundNames = { "Manche 1", "Manche 2", "Finale" };
+    public Animator conteiner_pAnimator;
+    public Animator conteiner_lAnimator; 
+
 
     [Header("Game Backgrounds (After Intro)")]
     public GameObject playersGameBackground;
     public GameObject leaderGameBackground;
+    public GameObject leaderGameAnim;
+    public GameObject playersGameAnim;
 
     [Header("Game Animators")]
     public Animator playersGameAnimator;
@@ -44,10 +48,15 @@ public class QuizSetup : MonoBehaviour
     public TMP_Text[] playerScoreTextsPlayers;
 
     [Header("Ending")]
-    public GameObject playersFinalScreen;
-    public GameObject leaderFinalScreen;
+    
     public TMP_Text finalWinnerText;
     public TMP_Text finalWinnerTextHost;
+    public GameObject playersFinalScreen; 
+    public GameObject leaderFinalScreen;
+    public GameObject leaderAnimFinal;
+    public GameObject playerAnimFinal;
+    public GameObject playerFinalText;
+    public GameObject playerFinalTextHost;
 
     private string[] playerNames = new string[4];
     public int[] playerScores = new int[4];
@@ -55,6 +64,8 @@ public class QuizSetup : MonoBehaviour
     [Header("References")]
     public ArduinoInputManager arduinoInputManager;
 
+
+    private bool isRoundActive = false;
     void Start()
     {
         playerNamesPanel.SetActive(false);
@@ -74,18 +85,15 @@ public class QuizSetup : MonoBehaviour
         UpdateScoreUI();
 
         
-        playersRound1Background.SetActive(false);
-        leaderRound1Background.SetActive(false);
-        playersRound2Background.SetActive(false);
-        leaderRound2Background.SetActive(false);
-        playersRound3Background.SetActive(false);
-        leaderRound3Background.SetActive(false);
+        container_p.SetActive(false);
+        container_l.SetActive(false);
         playersGameBackground.SetActive(false);
         leaderGameBackground.SetActive(false);
-        playersFinalScreen.SetActive(false);
-        leaderFinalScreen.SetActive(false);
         keyboard.SetActive(false);
-        
+        playersGameAnim.SetActive(false);
+        leaderGameAnim.SetActive(false);
+        playersFinalScreen.SetActive(false);
+        leaderFinalScreen.SetActive(false); 
     }
 
     void OnStartQuiz()
@@ -110,61 +118,70 @@ public class QuizSetup : MonoBehaviour
     }
 
     void OnNext()
-    {
-        for (int i = 0; i < playerNameInputs.Length; i++)
-            playerNames[i] = playerNameInputs[i].text.Trim();
 
+    {
+        string roundLabel = "Manche 1";
+        for
+            (int i = 0; i < playerNameInputs.Length; i++)
+            playerNames[i] = playerNameInputs[i].text.Trim();
         playerNamesPanel.SetActive(false);
         playersBackground.SetActive(false);
         leaderBackground.SetActive(false);
         keyboard.SetActive(false);
-
-        for (int i = 0; i < playerNameTextsHost.Length; i++)
+        for
+            (int i = 0; i < playerNameTextsHost.Length; i++)
             playerNameTextsHost[i].text = playerNames[i];
-
-        for (int i = 0; i < playerNameTextsPlayers.Length; i++)
+        for
+            (int i = 0; i < playerNameTextsPlayers.Length; i++)
             playerNameTextsPlayers[i].text = playerNames[i];
-
         Debug.Log("Gracze: " + string.Join(", ", playerNames));
-
-        StartCoroutine(ShowRoundIntro(playersRound1Background, leaderRound1Background, 2f, playersGameBackground, leaderGameBackground));
+        ShowRoundIntro(roundLabel);
     }
-
-    IEnumerator ShowRoundIntro(GameObject playersIntro, GameObject leaderIntro, float delay, GameObject playersFinal, GameObject leaderFinal)
+    private void ShowRoundIntro(string roundLabel)
     {
-        
-        if (currentRound > 1)
-        {
-            if (playersGameAnimator != null) playersGameAnimator.SetTrigger("Exit");
-            if (leaderGameAnimator != null) leaderGameAnimator.SetTrigger("Exit");
-
-            yield return new WaitForSeconds(1f); 
-
-            playersGameBackground.SetActive(false);
-            leaderGameBackground.SetActive(false);
-
-            
-            UpdateScoreUI();
-        }
+        isRoundActive = true;
 
         
-        playersIntro.SetActive(true);
-        leaderIntro.SetActive(true);
-        yield return new WaitForSeconds(delay);
-        playersIntro.SetActive(false);
-        leaderIntro.SetActive(false);
+        roundText_p.text = roundLabel;
+        roundText_l.text = roundLabel;
+
+       
+        playersGameBackground.SetActive(false);
+        leaderGameBackground.SetActive(false);
 
         
-        playersFinal.SetActive(true);
-        leaderFinal.SetActive(true);
+        container_p.SetActive(false);
+        container_l.SetActive(false);
+        container_p.SetActive(true);
+        container_l.SetActive(true);
 
+        
+        StartCoroutine(RoundIntroCoroutine());
+    }
+    private IEnumerator RoundIntroCoroutine()
+    {
+        yield return new WaitForSeconds(3f);
+
+        
+        container_p.SetActive(false);
+        container_l.SetActive(false);
+
+       
+        playersGameBackground.SetActive(true);
+        leaderGameBackground.SetActive(true);
+        if (arduinoInputManager != null) arduinoInputManager.EnableBuzzing();
+        
+        
         if (playersGameAnimator != null) playersGameAnimator.SetTrigger("Enter");
         if (leaderGameAnimator != null) leaderGameAnimator.SetTrigger("Enter");
-
-        
-        if (arduinoInputManager != null)
-            arduinoInputManager.EnableBuzzing();
+        yield return new WaitForSeconds(1f);
+        playersGameAnim.SetActive(true);
+        leaderGameAnim.SetActive(true);
     }
+
+
+
+
 
     public void AddPoint(int playerIndex)
     {
@@ -186,17 +203,11 @@ public class QuizSetup : MonoBehaviour
 
     public int NextRound()
     {
-        
         currentRound++;
-
-        
-        playersRound1Background.SetActive(false);
-        leaderRound1Background.SetActive(false);
-        playersRound2Background.SetActive(false);
-        leaderRound2Background.SetActive(false);
-        playersRound3Background.SetActive(false);
-        leaderRound3Background.SetActive(false);
-       
+        leaderGameAnim.SetActive(false);
+        playersGameAnim.SetActive(false);
+        container_p.SetActive(false);
+        container_l.SetActive(false);
 
         if (currentRound > totalRounds)
         {
@@ -204,21 +215,32 @@ public class QuizSetup : MonoBehaviour
             return -1;
         }
 
-        
+        string roundLabel = "";
         switch (currentRound)
         {
-            case 2:
-                StartCoroutine(HandleRoundTransition(playersRound2Background, leaderRound2Background, 2f, playersGameBackground, leaderGameBackground));
-                break;
-            case 3:
-                StartCoroutine(HandleRoundTransition(playersRound3Background, leaderRound3Background, 2f, playersGameBackground, leaderGameBackground));
-                break;
+            case 1: roundLabel = "Manche 1"; break;
+            case 2: roundLabel = "Manche 2"; break;
+            case 3: roundLabel = "Finale"; break;
+            default: EndGame(); return -1;
         }
 
-        return -1; 
+        StartCoroutine(HandleRoundTransition(roundLabel));
+        return -1;
+    }
+    private void ShowRound(string roundLabel, bool withReset = false)
+    {
+        roundText_p.text = roundLabel;
+        roundText_l.text = roundLabel;
+
+        container_p.SetActive(false);
+        container_l.SetActive(false);
+        container_p.SetActive(true);
+        container_l.SetActive(true);
+
+        if (withReset) StartCoroutine(RoundIntroCoroutine());
     }
 
-    IEnumerator HandleRoundTransition(GameObject playersIntro, GameObject leaderIntro, float delay, GameObject playersFinal, GameObject leaderFinal)
+    IEnumerator HandleRoundTransition(string roundLabel)
     {
         
         if (playersGameAnimator != null) playersGameAnimator.SetTrigger("Exit");
@@ -228,17 +250,22 @@ public class QuizSetup : MonoBehaviour
 
         
         int eliminatedPlayer = EliminateLowestScorePlayer();
+
+        
         for (int i = 0; i < playerScores.Length; i++)
-            if (playerScores[i] >= 0) playerScores[i] = 0;
+            if (playerScores[i] >= 0)
+                playerScores[i] = 0;
 
         UpdateScoreUI();
 
+        
         if (eliminatedPlayer >= 0 && arduinoInputManager != null)
             arduinoInputManager.SendToArduino("-" + (eliminatedPlayer + 1));
 
-        
-        yield return ShowRoundIntro(playersIntro, leaderIntro, delay, playersFinal, leaderFinal);
+       
+        ShowRoundIntro(roundLabel);
     }
+
 
     private int EliminateLowestScorePlayer()
     {
@@ -272,9 +299,12 @@ public class QuizSetup : MonoBehaviour
     {
         playersGameBackground.SetActive(false);
         leaderGameBackground.SetActive(false);
-
-        playersFinalScreen.SetActive(true);
+        playersFinalScreen.SetActive(true); 
         leaderFinalScreen.SetActive(true);
+        leaderAnimFinal.SetActive(true);
+        playerAnimFinal.SetActive(true);
+        playerFinalText.SetActive(true);
+        playerFinalTextHost.SetActive(true);
 
         int winnerIndex = -1;
         int highestScore = -1;
@@ -307,6 +337,15 @@ public class QuizSetup : MonoBehaviour
         }
     }
 
+    void SavePlayerNames()
+    {
+        for (int i = 0; i < playerNameInputs.Length; i++)
+        {
+            playerNames[i] = playerNameInputs[i].text;
+            playerNameTextsHost[i].text = playerNames[i];
+            playerNameTextsPlayers[i].text = playerNames[i];
+        }
+    }
 
     public void ResetQuiz()
     {
@@ -325,9 +364,12 @@ public class QuizSetup : MonoBehaviour
         UpdateScoreUI();
         currentRound = 1;
 
+        leaderAnimFinal.SetActive(false);
+        playerAnimFinal.SetActive(false);
+        playerFinalText.SetActive(false);
+        playerFinalTextHost.SetActive(false);
         playersFinalScreen.SetActive(false);
         leaderFinalScreen.SetActive(false);
-
         playersBackground.SetActive(true);
         leaderBackground.SetActive(true);
 

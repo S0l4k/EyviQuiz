@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.IO.Ports;
 using UnityEngine.UI;
+using Unity.VisualScripting;
 
 public class ArduinoInputManager : MonoBehaviour
 {
@@ -23,10 +24,20 @@ public class ArduinoInputManager : MonoBehaviour
     public AudioClip wrongAnswerSound;
 
     [Header("Player Highlights")]
-    public Image[] playerHighlights;
+    public GameObject[] playerHighlights;
+    public Canvas uiCanva_P; 
+    public Camera mainCamera_p;
+    public RectTransform[] playerUIElements_p;
+    [Header("Player Highlight Anchors")]
+    public Transform[] playerHighlightAnchors;
 
     [Header("Host Highlights")]
-    public Image[] hostHighlights;
+    public GameObject[] hostHighlights;
+    public Canvas uiCanva_l;
+    public Camera mainCamera_l;
+    public RectTransform[] playerUIElements_l;
+    [Header("Player Highlight Anchors")]
+    public Transform[] leaderHighlightAnchors;
 
     private SerialPort serialPort;
     private bool playerBuzzed = false;
@@ -51,25 +62,7 @@ public class ArduinoInputManager : MonoBehaviour
             Debug.LogError("Błąd otwierania portu: " + e.Message);
         }
         
-        foreach (var img in playerHighlights)
-        {
-            if (img != null)
-            {
-                Color c = img.color;
-                c.a = 0f;
-                img.color = c;
-            }
-        }
-        foreach (var img in hostHighlights)
-        {
-            if (img != null)
-            {
-                Color c = img.color;
-                c.a = 0f;
-                img.color = c;
-            }
-        }
-
+      
     }
 
     void Update()
@@ -176,21 +169,28 @@ public class ArduinoInputManager : MonoBehaviour
         nextRoundButton.SetActive(false);
     }
 
-    private void HighlightPlayer(int index)
+    private void HighlightPlayer(int playerIndex)
     {
-        ClearHighlights(); 
-        if (index >= 0 && index < playerHighlights.Length && playerHighlights[index] != null)
-        {
-            Color c = playerHighlights[index].color;
-            c.a = 1f;
-            playerHighlights[index].color = c;
-        }
+        ClearHighlights();
 
-        if (index >= 0 && index < hostHighlights.Length && hostHighlights[index] != null)
+        if (playerIndex >= 0
+            && playerIndex < playerHighlights.Length
+            && playerHighlights[playerIndex] != null
+            && playerIndex < playerUIElements_l.Length
+            && playerUIElements_l [playerIndex] != null)
         {
-            Color c = hostHighlights[index].color;
-            c.a = 1f;
-            hostHighlights[index].color = c;
+           
+            Vector3 screenPos_l = RectTransformUtility.WorldToScreenPoint(uiCanva_l.worldCamera, playerUIElements_l[playerIndex].position);
+            Vector3 screenPos_p = RectTransformUtility.WorldToScreenPoint(uiCanva_P.worldCamera, playerUIElements_p[playerIndex].position);
+           
+            Vector3 worldPos_l = mainCamera_l.ScreenToWorldPoint(new Vector3(screenPos_l.x, screenPos_l.y, 16f));
+            Vector3 worldPos_p = mainCamera_p.ScreenToWorldPoint(new Vector3(screenPos_p.x, screenPos_p.y, 16f));
+
+            
+            hostHighlights[playerIndex].transform.position = worldPos_l;
+            hostHighlights[playerIndex].SetActive(true);
+            playerHighlights[playerIndex].transform.position=worldPos_p;
+            playerHighlights[playerIndex].SetActive(true) ;
         }
     }
 
@@ -200,21 +200,18 @@ public class ArduinoInputManager : MonoBehaviour
         {
             if (img != null)
             {
-                Color c = img.color;
-                c.a = 0f;
-                img.color = c;
+                img.SetActive(false);
             }
         }
         foreach (var img in hostHighlights)
         {
             if (img != null)
             {
-                Color c = img.color;
-                c.a = 0f;
-                img.color = c;
+                img.SetActive(false);
             }
         }
     }
+
     void SimulateBuzz(int playerNumber)
     {
         PlayerBuzz(playerNumber);
