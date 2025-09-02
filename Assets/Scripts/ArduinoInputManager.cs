@@ -263,23 +263,28 @@ public class ArduinoInputManager : MonoBehaviour
         }
     }
 
-    public void OpenPort()
+
+    public void UseExternalPort(SerialPort port, string name)
     {
         if (serialPort != null && serialPort.IsOpen)
             serialPort.Close();
 
-        serialPort = new SerialPort(portName, baudRate);
-        try
+        serialPort = port;
+        portName = name;
+
+        if (!serialPort.IsOpen)
         {
-            serialPort.Open();
-            serialPort.ReadTimeout = 50;
-            Debug.Log("ArduinoInputManager: port otwarty: " + portName);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("ArduinoInputManager: błąd otwierania portu: " + e.Message);
+            try
+            {
+                serialPort.Open();
+                serialPort.ReadTimeout = 50;
+                Debug.Log("ArduinoInputManager: używa portu z PortSelector -> " + portName);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("ArduinoInputManager: błąd otwierania portu: " + e.Message);
+            }
         }
     }
-
 }
 

@@ -91,11 +91,10 @@ public class ArduinoPortSelector : MonoBehaviour
                 Debug.Log("Po³¹czono z Arduino!");
                 connectionStatus.color = connectedColor;
 
-                
+
                 if (arduinoInputManager != null)
                 {
-                    arduinoInputManager.portName = portName;
-                    arduinoInputManager.OpenPort(); 
+                    arduinoInputManager.UseExternalPort(tempPort, portName);
                 }
 
                 tempPort.Close();

@@ -104,6 +104,7 @@ public class QuizSetup : MonoBehaviour
         startQuizButton.gameObject.SetActive(false);
         playerNamesPanel.SetActive(true);
         keyboard.SetActive(true);
+        ArduinoConnection.SetActive(false);
     }
 
     void CheckPlayerNames()
@@ -118,7 +119,7 @@ public class QuizSetup : MonoBehaviour
             }
         }
         nextButton.gameObject.SetActive(allFilled);
-        ArduinoConnection.SetActive(false );
+       
     }
 
     void OnNext()
