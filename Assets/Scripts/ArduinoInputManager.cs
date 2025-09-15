@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.IO.Ports;
 using UnityEngine.UI;
-using Unity.VisualScripting;
 
 public class ArduinoInputManager : MonoBehaviour
 {
@@ -13,31 +12,17 @@ public class ArduinoInputManager : MonoBehaviour
     public GameObject correctAnswerButton;
     public GameObject wrongAnswerButton;
 
-    [Header("Host Next Buttons")]
-    
-    public GameObject nextRoundButton;
+
 
     [Header("Audio")]
     public AudioSource audioSource;
-    public AudioClip[] playerBuzzSounds; 
+    public AudioClip[] playerBuzzSounds;
     public AudioClip correctAnswerSound;
     public AudioClip wrongAnswerSound;
 
-    [Header("Player Highlights")]
-    public GameObject[] playerHighlights;
-    public Canvas uiCanva_P; 
-    public Camera mainCamera_p;
-    public RectTransform[] playerUIElements_p;
-    [Header("Player Highlight Anchors")]
-    public Transform[] playerHighlightAnchors;
-
-    [Header("Host Highlights")]
-    public GameObject[] hostHighlights;
-    public Canvas uiCanva_l;
-    public Camera mainCamera_l;
-    public RectTransform[] playerUIElements_l;
-    [Header("Player Highlight Anchors")]
-    public Transform[] leaderHighlightAnchors;
+    [Header("UI Highlights (Glow under players)")]
+    public GameObject[] playerGlowHost;
+    public GameObject[] playerGlowPlayers;
 
     private SerialPort serialPort;
     private bool playerBuzzed = false;
@@ -50,32 +35,27 @@ public class ArduinoInputManager : MonoBehaviour
     {
         correctAnswerButton.SetActive(false);
         wrongAnswerButton.SetActive(false);
-
-    
-        
-      
     }
 
     void Update()
     {
         if (!playerBuzzed && canBuzz)
         {
-            // --- klawiatura do testów ---
+            // --- TESTY z klawiatury ---
             if (Input.GetKeyDown(KeyCode.Alpha1)) SimulateBuzz(1);
             if (Input.GetKeyDown(KeyCode.Alpha2)) SimulateBuzz(2);
             if (Input.GetKeyDown(KeyCode.Alpha3)) SimulateBuzz(3);
             if (Input.GetKeyDown(KeyCode.Alpha4)) SimulateBuzz(4);
 
             // --- Arduino ---
-            while (serialPort.BytesToRead > 0)
+            if (serialPort != null && serialPort.IsOpen && serialPort.BytesToRead > 0)
             {
                 try
                 {
                     string data = serialPort.ReadLine().Trim();
                     if (!string.IsNullOrEmpty(data))
                     {
-                        int playerNumber;
-                        if (int.TryParse(data, out playerNumber))
+                        if (int.TryParse(data, out int playerNumber))
                         {
                             PlayerBuzz(playerNumber);
                         }
@@ -91,13 +71,11 @@ public class ArduinoInputManager : MonoBehaviour
 
     public void OnCorrectAnswer()
     {
-        Debug.Log("Prowadzący: dobra odpowiedź gracza " + (currentPlayer + 1));
+        Debug.Log("Poprawna odpowiedź gracza " + (currentPlayer + 1));
         if (currentPlayer >= 0 && quizSetup != null)
         {
             quizSetup.AddPoint(currentPlayer);
         }
-
-       
         PlaySound(correctAnswerSound);
         SendToArduino("0");
         ResetBuzz();
@@ -105,9 +83,7 @@ public class ArduinoInputManager : MonoBehaviour
 
     public void OnWrongAnswer()
     {
-        Debug.Log("Prowadzący: zła odpowiedź gracza " + (currentPlayer + 1));
-
-        
+        Debug.Log("Zła odpowiedź gracza " + (currentPlayer + 1));
         PlaySound(wrongAnswerSound);
         SendToArduino("0");
         ResetBuzz();
@@ -121,9 +97,8 @@ public class ArduinoInputManager : MonoBehaviour
         currentPlayer = -1;
         ClearHighlights();
         OnNextQuestion();
-        nextRoundButton.SetActive(true);
+       
     }
-
 
     void OnApplicationQuit()
     {
@@ -138,16 +113,16 @@ public class ArduinoInputManager : MonoBehaviour
         int playerIndex = playerNumber - 1;
         if (playerIndex < 0 || playerIndex >= quizSetup.playerScores.Length) return;
 
-        if (quizSetup.playerScores[playerIndex] < 0)
+       
+        if (quizSetup.playerScores[playerIndex] < 0 || !quizSetup.playerActive[playerIndex])
         {
-            Debug.Log("Gracz " + playerNumber + " jest wyeliminowany i nie może się zgłaszać!");
+            Debug.Log("Gracz " + playerNumber + " nie może się zgłaszać!");
             return;
         }
 
         currentPlayer = playerIndex;
         Debug.Log("Gracz zgłosił się: " + playerNumber);
 
-       
         if (playerIndex < playerBuzzSounds.Length)
             PlaySound(playerBuzzSounds[playerIndex]);
 
@@ -157,50 +132,30 @@ public class ArduinoInputManager : MonoBehaviour
         canBuzz = false;
 
         HighlightPlayer(playerIndex);
-        nextRoundButton.SetActive(false);
+        
     }
+
 
     private void HighlightPlayer(int playerIndex)
     {
         ClearHighlights();
-
-        if (playerIndex >= 0
-            && playerIndex < playerHighlights.Length
-            && playerHighlights[playerIndex] != null
-            && playerIndex < playerUIElements_l.Length
-            && playerUIElements_l [playerIndex] != null)
+        if (playerIndex >= 0)
         {
-           
-            Vector3 screenPos_l = RectTransformUtility.WorldToScreenPoint(uiCanva_l.worldCamera, playerUIElements_l[playerIndex].position);
-            Vector3 screenPos_p = RectTransformUtility.WorldToScreenPoint(uiCanva_P.worldCamera, playerUIElements_p[playerIndex].position);
-           
-            Vector3 worldPos_l = mainCamera_l.ScreenToWorldPoint(new Vector3(screenPos_l.x, screenPos_l.y, 10f));
-            Vector3 worldPos_p = mainCamera_p.ScreenToWorldPoint(new Vector3(screenPos_p.x, screenPos_p.y, 10f));
+            if (playerIndex < playerGlowHost.Length && playerGlowHost[playerIndex] != null)
+                playerGlowHost[playerIndex].SetActive(true);
 
-            
-            hostHighlights[playerIndex].transform.position = worldPos_l;
-            hostHighlights[playerIndex].SetActive(true);
-            playerHighlights[playerIndex].transform.position=worldPos_p;
-            playerHighlights[playerIndex].SetActive(true) ;
+            if (playerIndex < playerGlowPlayers.Length && playerGlowPlayers[playerIndex] != null)
+                playerGlowPlayers[playerIndex].SetActive(true);
         }
     }
 
     private void ClearHighlights()
     {
-        foreach (var img in playerHighlights)
-        {
-            if (img != null)
-            {
-                img.SetActive(false);
-            }
-        }
-        foreach (var img in hostHighlights)
-        {
-            if (img != null)
-            {
-                img.SetActive(false);
-            }
-        }
+        foreach (var glow in playerGlowHost)
+            if (glow != null) glow.SetActive(false);
+
+        foreach (var glow in playerGlowPlayers)
+            if (glow != null) glow.SetActive(false);
     }
 
     void SimulateBuzz(int playerNumber)
@@ -210,28 +165,19 @@ public class ArduinoInputManager : MonoBehaviour
 
     public void OnNextQuestion()
     {
-        Debug.Log("Prowadzący: następne pytanie – gracze mogą się zgłaszać");
+        Debug.Log("Następne pytanie – gracze mogą się zgłaszać");
         canBuzz = true;
         playerBuzzed = false;
-        
-        nextRoundButton.SetActive(false);
+       
     }
 
     public void OnNextRound()
     {
-        Debug.Log("Prowadzący: następna runda");
-        int eliminatedPlayer = quizSetup.NextRound();
-
-        if (eliminatedPlayer >= 0)
-        {
-            
-            SendToArduino("-" + (eliminatedPlayer + 1));
-        }
-
+        Debug.Log("Rozpoczęcie finału");
         canBuzz = false;
-        
-        nextRoundButton.SetActive(false);
+      
     }
+
     public void EnableBuzzing()
     {
         Debug.Log("Intro zakończone – gracze mogą się zgłaszać");
@@ -263,7 +209,6 @@ public class ArduinoInputManager : MonoBehaviour
         }
     }
 
-
     public void UseExternalPort(SerialPort port, string name)
     {
         if (serialPort != null && serialPort.IsOpen)
@@ -287,4 +232,3 @@ public class ArduinoInputManager : MonoBehaviour
         }
     }
 }
-

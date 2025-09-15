@@ -7,104 +7,88 @@ using TMPro;
 public class ArduinoPortSelector : MonoBehaviour
 {
     [Header("UI Elements")]
-    public TMP_Dropdown portDropdown;
-    public Button connectButton;
-    public Image connectionStatus; 
+    public TMP_InputField manualPortField; 
+    public Button checkButton;             
+    public Image connectionStatus;         
     public Color connectedColor = Color.green;
     public Color disconnectedColor = Color.red;
 
     public ArduinoInputManager arduinoInputManager;
 
     private SerialPort tempPort;
-    private string[] availablePorts;
 
     void Start()
     {
+        
         connectionStatus.color = disconnectedColor;
-        RefreshPorts();
-        connectButton.onClick.AddListener(OnConnect);
+        checkButton.onClick.AddListener(OnCheckPort);
     }
 
-    void RefreshPorts()
+    
+    void OnCheckPort()
     {
-#if UNITY_STANDALONE_WIN
-        availablePorts = SerialPort.GetPortNames();
-        if (availablePorts == null || availablePorts.Length == 0)
+        string manualPort = manualPortField.text.Trim();
+        if (string.IsNullOrEmpty(manualPort))
         {
-            availablePorts = new string[] { "No Ports" };
-        }
-#else
-        availablePorts = new string[] { "N/A" };
-#endif
-        portDropdown.ClearOptions();
-        portDropdown.AddOptions(new System.Collections.Generic.List<string>(availablePorts));
-    }
-
-    void OnConnect()
-    {
-        string selectedPort = availablePorts[portDropdown.value];
-        if (selectedPort == "No Ports" || selectedPort == "N/A")
-        {
-            Debug.LogWarning("Nie ma dostêpnych portów!");
+            Debug.LogWarning("Wpisz port szeregowy np. COM3.");
             return;
         }
+        StartCoroutine(CheckArduinoConnection(manualPort));
+    }
 
-        tempPort = new SerialPort(selectedPort, 9600);
+   
+    IEnumerator CheckArduinoConnection(string portName)
+    {
+        tempPort = new SerialPort(portName, 9600);
         try
         {
             tempPort.Open();
-            tempPort.ReadTimeout = 1000; 
-            StartCoroutine(CheckArduinoConnection(selectedPort));
+            tempPort.ReadTimeout = 1000;
+            tempPort.WriteLine("check");
         }
         catch (System.Exception e)
         {
             Debug.LogError("B³¹d otwierania portu: " + e.Message);
+            connectionStatus.color = disconnectedColor;
+            yield break;
         }
-    }
 
-    IEnumerator CheckArduinoConnection(string portName)
-    {
-        if (tempPort != null && tempPort.IsOpen)
+        float timer = 0f;
+        bool okReceived = false;
+
+        while (timer < 3f)
         {
-            tempPort.WriteLine("check");
-            float timer = 0f;
-            bool okReceived = false;
-
-            while (timer < 3f)
+            timer += Time.deltaTime;
+            try
             {
-                timer += Time.deltaTime;
-                try
+                string response = tempPort.ReadLine().Trim();
+                if (response == "OK")
                 {
-                    string response = tempPort.ReadLine().Trim();
-                    if (response == "OK")
-                    {
-                        okReceived = true;
-                        break;
-                    }
+                    okReceived = true;
+                    break;
                 }
-                catch { }
-                yield return null;
             }
+            catch { }
+            yield return null;
+        }
 
-            if (okReceived)
+        tempPort.Close();
+
+        if (okReceived)
+        {
+            Debug.Log("Po³¹czono z Arduino!");
+            connectionStatus.color = connectedColor;
+
+            if (arduinoInputManager != null)
             {
-                Debug.Log("Po³¹czono z Arduino!");
-                connectionStatus.color = connectedColor;
-
-
-                if (arduinoInputManager != null)
-                {
-                    arduinoInputManager.UseExternalPort(tempPort, portName);
-                }
-
-                tempPort.Close();
+                
+                arduinoInputManager.UseExternalPort(new SerialPort(portName, 9600), portName);
             }
-            else
-            {
-                Debug.LogWarning("Brak odpowiedzi od Arduino.");
-                connectionStatus.color = disconnectedColor;
-                tempPort.Close();
-            }
+        }
+        else
+        {
+            Debug.LogWarning("Brak odpowiedzi od Arduino.");
+            connectionStatus.color = disconnectedColor;
         }
     }
 }
