@@ -154,6 +154,8 @@ public class QuizSetup : MonoBehaviour
         roundText_l.text = roundLabel;
         playersGameBackground.SetActive(false);
         leaderGameBackground.SetActive(false);
+        playersGameAnim.SetActive(false);
+        leaderGameAnim.SetActive(false);
         container_p.SetActive(true);
         container_l.SetActive(true);
         StartCoroutine(RoundIntroCoroutine());
@@ -166,6 +168,8 @@ public class QuizSetup : MonoBehaviour
         container_l.SetActive(false);
         playersGameBackground.SetActive(true);
         leaderGameBackground.SetActive(true);
+        playersGameAnim.SetActive(false);
+        leaderGameAnim.SetActive(false);
 
         if (arduinoInputManager != null) arduinoInputManager.EnableBuzzing();
         if (playersGameAnimator != null) playersGameAnimator.SetTrigger("Enter");
